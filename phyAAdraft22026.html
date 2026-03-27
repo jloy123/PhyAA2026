@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Live Accelerometer Experiment</title>
+<style>
+body {
+    font-family: Arial;
+    text-align: center;
+    background: #f0f0f0;
+}
+.box {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    margin: auto;
+    margin-top: 20px;
+}
+button {
+    padding: 10px;
+    font-size: 16px;
+    margin: 10px;
+}
+</style>
+</head>
+<body>
+
+<div class="box">
+    <h2>📱 Live Phone Accelerometer</h2>
+
+    <button onclick="startSensor()">Start Sensor</button>
+
+    <p><b>Acceleration (m/s²):</b> <span id="acc">0</span></p>
+    <p><b>Angle θ (°):</b> <span id="angle">0</span></p>
+    <p><b>Theoretical a = g sinθ:</b> <span id="theory">0</span></p>
+
+    <canvas id="graph" width="350" height="250"></canvas>
+</div>
+
+<script>
+let g = 9.81;
+let ctx = document.getElementById("graph").getContext("2d");
+let dataExp = [];
+let dataTheory = [];
+
+function startSensor() {
+    if (typeof DeviceMotionEvent.requestPermission === "function") {
+        DeviceMotionEvent.requestPermission().then(permission => {
+            if (permission === "granted") {
+                window.addEventListener("devicemotion", handleMotion);
+            }
+        });
+    } else {
+        window.addEventListener("devicemotion", handleMotion);
+    }
+}
+
+function handleMotion(event) {
+    let ax = event.accelerationIncludingGravity.x;
+    let ay = event.accelerationIncludingGravity.y;
+    let az = event.accelerationIncludingGravity.z;
+
+    let acc = Math.sqrt(ax*ax + ay*ay + az*az);
+
+    let angle = Math.atan2(ax, Math.sqrt(ay*ay + az*az)) * 180 / Math.PI;
+    let theory = g * Math.sin(angle * Math.PI / 180);
+
+    document.getElementById("acc").textContent = acc.toFixed(2);
+    document.getElementById("angle").textContent = angle.toFixed(1);
+    document.getElementById("theory").textContent = theory.toFixed(2);
+
+    let sinTheta = Math.sin(angle * Math.PI / 180);
+
+    dataExp.push({x: sinTheta, y: ax});
+    dataTheory.push({x: sinTheta, y: theory});
+
+    drawGraph();
+}
+
+function drawGraph() {
+    ctx.clearRect(0, 0, 350, 250);
+
+    // axes
+    ctx.beginPath();
+    ctx.moveTo(40, 10);
+    ctx.lineTo(40, 230);
+    ctx.lineTo(340, 230);
+    ctx.stroke();
+
+    // experimental (blue)
+    ctx.fillStyle = "blue";
+    dataExp.forEach(p => {
+        let x = 40 + p.x * 300;
+        let y = 230 - (p.y / 10) * 200;
+        ctx.fillRect(x, y, 3, 3);
+    });
+
+    // theoretical (red)
+    ctx.fillStyle = "red";
+    dataTheory.forEach(p => {
+        let x = 40 + p.x * 300;
+        let y = 230 - (p.y / 10) * 200;
+        ctx.fillRect(x, y, 3, 3);
+    });
+}
+</script>
+
+</body>
+</html>
