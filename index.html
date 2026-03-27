@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Phone Accelerometer Simulation</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background: #f4f4f4;
+        padding: 20px;
+    }
+    .box {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        width: 400px;
+        margin: auto;
+        box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    input {
+        width: 100%;
+    }
+</style>
+</head>
+<body>
+
+<div class="box">
+    <h2>📱 Phone Rotation Simulation</h2>
+
+    <p><b>Angle (θ):</b> <span id="angleValue">0</span>°</p>
+    <input type="range" min="0" max="90" value="0" id="angleSlider">
+
+    <p><b>sin(θ):</b> <span id="sinValue">0</span></p>
+    <p><b>Acceleration (m/s²):</b> <span id="accValue">0</span></p>
+
+    <canvas id="graph" width="350" height="250"></canvas>
+</div>
+
+<script>
+const g = 9.81;
+const slider = document.getElementById("angleSlider");
+const angleText = document.getElementById("angleValue");
+const sinText = document.getElementById("sinValue");
+const accText = document.getElementById("accValue");
+
+const canvas = document.getElementById("graph");
+const ctx = canvas.getContext("2d");
+
+let data = [];
+
+function update() {
+    let angle = slider.value;
+    let radians = angle * Math.PI / 180;
+    let sinVal = Math.sin(radians);
+    let acc = g * sinVal;
+
+    angleText.textContent = angle;
+    sinText.textContent = sinVal.toFixed(3);
+    accText.textContent = acc.toFixed(2);
+
+    data.push({x: sinVal, y: acc});
+    drawGraph();
+}
+
+slider.addEventListener("input", update);
+
+function drawGraph() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Axes
+    ctx.beginPath();
+    ctx.moveTo(40, 10);
+    ctx.lineTo(40, 230);
+    ctx.lineTo(340, 230);
+    ctx.stroke();
+
+    // Labels
+    ctx.fillText("Acceleration", 5, 20);
+    ctx.fillText("sin(θ)", 300, 245);
+
+    // Plot points
+    data.forEach(point => {
+        let x = 40 + point.x * 300;
+        let y = 230 - (point.y / 10) * 200;
+
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, 2*Math.PI);
+        ctx.fill();
+    });
+}
+
+// Initialize
+update();
+</script>
+
+</body>
+</html>
